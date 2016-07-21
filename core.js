@@ -6,7 +6,6 @@
 //Costante di Gravitazione
 var G = 6.67408e-11;
 
-
 class Vector{
   constructor(x, y){
     this.x = x;
@@ -14,20 +13,27 @@ class Vector{
   }
 }
 
+//la classe rappresenta un corpo nello spazio, la dicitura pianeta non è del tutto corretta
 class Planet {
   constructor(x, y, mass, velocity, stage, planetsList, color) {
+    //Posizione x e y del pianeta
     this.x = x;
     this.y = y;
+    //Incremento tra uno step e l'altro delle componenti x e y
     this.dx = 0;
     this.dy = 0;
+    //Massa del pianeta
     this.mass = mass;
+    //Vettore velocità
     this.velocity = velocity;
+
     this.stage = stage;
 
     //Traccia dell'orbita
     this.orbitStroke = new createjs.Shape();
     this.stage.addChild(this.orbitStroke);
 
+    //Rappresentazione del pianeta
     this.shape = new createjs.Shape();
     this.shape.graphics.beginFill(color).drawCircle(0, 0, 10);
     this.stage.addChild(this.shape);
@@ -38,8 +44,11 @@ class Planet {
   }
   update(){
     //Per ogni pianeta che influisce nel sistema calcolo l'attrazione gravitazionale
-    //si potrebbe ottimizzare questa parte
+    //si potrebbe ottimizzare questa parte (anche perchè calcola due volte la stessa forza per 2 pianeti)
+
+    //Elenco delle forze agenti sul pianeta
     var forzeAgenti = [];
+    //Per ogni pianeta presente
     this.planetsList.forEach(function(planet) {
       if(planet != this){
         //Distanza tra i due pianeti
@@ -70,21 +79,27 @@ class Planet {
     //Calcolo le componenti dell'accelerazione
     var Ax = Frisultante.x / this.mass;
     var Ay = Frisultante.y / this.mass;
-    //dt in secondi
+
+    //dt in secondi, ovvero l'incremento dell'integratore di eulero
     var dt = 60*60*1; //1h
+    //Calcolo la variazione di posizione usando l'equazione di un moto unif. accelerato
     this.dx = (this.velocity.x * dt) + ((1/2) * Ax * Math.pow(dt, 2));
     this.dy = (this.velocity.y * dt) + ((1/2) * Ay * Math.pow(dt, 2));
 
+    //Calcolo la nuova velocità del pianeta
     this.velocity.x = this.velocity.x + (Ax * dt);
     this.velocity.y = this.velocity.y + (Ay * dt);
   }
   //Viene eseguito dopo che tutti i corpi hanno calcolato le loro forze, altrimenti se modificassi la posizione in istanti diversi dei vari corpi il calcolo risulta errato
   afterUpdate(){
+    //Sposto il pianeta nella sua nuova posizione
     this.x += this.dx;
     this.y += this.dy;
+
     //Utilizzo un fattore di divisione pari a 1*10^9 per scalare le dimensioni della posizione, per farle rientrare su schermo
     var newshapeX = Math.round((stage.canvas.width/2) + (this.x/1e9));
     var newshapeY = Math.round((stage.canvas.height/2) + (this.y/1e9));
+
 
     //Traccio l'orbita
     if(this.shape.x != 0 && this.shape.y != 0){
@@ -95,9 +110,10 @@ class Planet {
       this.orbitStroke.graphics.endStroke();
     }
 
-    //Sposto il pianeta
+    //Sposto il pianeta a livello grafico
     this.shape.x = newshapeX;
     this.shape.y = newshapeY;
+
     //console.log(this.shape.x + ", " + this.shape.y);
   }
 
@@ -109,6 +125,7 @@ background = new createjs.Shape();
 background.graphics.beginFill("black").drawRect(0, 0, stage.canvas.width, stage.canvas.height);
 stage.addChild(background);
 
+//Lista dei pianeti
 planetsList = [];
 
 //Tutti i pianeti sono presi al Perielio con la loro velocità max, fonte dei dati Wikipedia
@@ -126,6 +143,8 @@ planetsList.push(marte);
 
 //Contatore delle ore
 var elapsedHours = 0;
+
+//I seguenti timeout possono essere migliorati inserendo all'interno un ciclo for che esegua tot step e solo poi aggiorni a schermo la posizione
 //Calcolo le posizioni dei pianeti nel tempo ogni 10ms
 function timeout() {
   window.setTimeout(function (){
