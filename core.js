@@ -82,11 +82,14 @@ class Planet {
 
     //dt in secondi, ovvero l'incremento dell'integratore di eulero
     var dt = 60*60*1; //1h
-    //Calcolo la variazione di posizione usando l'equazione di un moto unif. accelerato
-    this.dx = (this.velocity.x * dt) + ((1/2) * Ax * Math.pow(dt, 2));
-    this.dy = (this.velocity.y * dt) + ((1/2) * Ay * Math.pow(dt, 2));
+    //Calcolo la variazione di posizione
+    //l'accelerazione viene aggiornata step by step quindi per un dt di tempo il pianeta avanza con una accelerazione = 0 (moto rettilineo uniforme)
+    this.dx = (this.velocity.x * dt); //+ ((1/2) * Ax * Math.pow(dt, 2));
+    this.dy = (this.velocity.y * dt); //+ ((1/2) * Ay * Math.pow(dt, 2));
+    //metodo alternativo migliore è quello di fare una media tra accelerazione iniziale e quella stimata senza perturbazioni
+    //approfondimento: https://en.wikipedia.org/wiki/Numerical_model_of_the_Solar_System
 
-    //Calcolo la nuova velocità del pianeta
+    //Calcolo la nuova velocità del pianeta basandomi sull'accelerazione
     this.velocity.x = this.velocity.x + (Ax * dt);
     this.velocity.y = this.velocity.y + (Ay * dt);
   }
