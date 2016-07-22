@@ -6,6 +6,11 @@
 //Costante di Gravitazione
 var G = 6.67408e-11;
 
+var fps = 30;
+var calcoliPerFrame = 200;
+var h = 60*10; //10 minuti - Integratore di Eulero
+
+
 class Vector{
   constructor(x, y){
     this.x = x;
@@ -81,15 +86,27 @@ class Planet {
     var Ay = Frisultante.y / this.mass;
 
     //dt in secondi, ovvero l'incremento dell'integratore di eulero
-    var dt = 60*60*1; //1h
+    //var dt = 60*60*1; //1h
+    //var dt = 60*10; //10min
+    var dt = h;
     //Calcolo la variazione di posizione
     //l'accelerazione viene aggiornata step by step quindi per un dt di tempo il pianeta avanza con una accelerazione = 0 (moto rettilineo uniforme)
-    this.dx = (this.velocity.x * dt); //+ ((1/2) * Ax * Math.pow(dt, 2));
-    this.dy = (this.velocity.y * dt); //+ ((1/2) * Ay * Math.pow(dt, 2));
+    // Legge del moto:
+    // v = dx/dt; a = dv/dt;
+    // quindi: dx = v * dt; dv = a * dt;
+    // Abbiamo due equazioni ODE (equazioni differenziali ordinarie) che si possono risolvere con le "integrazioni numeriche"
+    // Metodo di Eulero:
+    // x(n+1) = x(n) + h * f(t(n), x(n))
+    // f(t(n), x(n)) = velocità (v)
+    this.dx = (this.velocity.x * dt);
+    this.dy = (this.velocity.y * dt);
     //metodo alternativo migliore è quello di fare una media tra accelerazione iniziale e quella stimata senza perturbazioni
     //approfondimento: https://en.wikipedia.org/wiki/Numerical_model_of_the_Solar_System
 
     //Calcolo la nuova velocità del pianeta basandomi sull'accelerazione
+    // Metodo di Eulero:
+    // v(n+1) = v(n) + h * f(t(n), v(n))
+    // f(t(n), v(n)) = accelerazione (a)
     this.velocity.x = this.velocity.x + (Ax * dt);
     this.velocity.y = this.velocity.y + (Ay * dt);
   }
@@ -105,12 +122,13 @@ class Planet {
 
 
     //Traccio l'orbita
-    if(this.shape.x != 0 && this.shape.y != 0){
+    if(this.shape.x != 0 && this.shape.y != 0 && (this.shape.x != newshapeX || this.shape.y != newshapeY )){
       this.orbitStroke.graphics.setStrokeStyle(2);
       this.orbitStroke.graphics.beginStroke("red");
       this.orbitStroke.graphics.moveTo(this.shape.x,this.shape.y);
       this.orbitStroke.graphics.lineTo(newshapeX, newshapeY);
       this.orbitStroke.graphics.endStroke();
+      //this.orbitStroke.cache(0,0,1000,1000);
     }
 
     //Sposto il pianeta a livello grafico
@@ -144,47 +162,31 @@ planetsList.push(venere);
 planetsList.push(terra);
 planetsList.push(marte);
 
-//Contatore delle ore
-var elapsedHours = 0;
 
-//I seguenti timeout possono essere migliorati inserendo all'interno un ciclo for che esegua tot step e solo poi aggiorni a schermo la posizione
-//Calcolo le posizioni dei pianeti nel tempo ogni 10ms
-function timeout() {
-  window.setTimeout(function (){
-    planetsList.forEach(function (planet){
-      planet.update();
-    });
-    planetsList.forEach(function (planet){
-      planet.afterUpdate();
-    });
-    elapsedHours++;
-    timeout();
+var frameCalcolati = 0;
 
-  }, 10); //1gg = 1sec
-}
-timeout();
-
-//Mostro a schermo la posizione dei nuovi pianeti a circa 30FPS
-function timeout2() {
-  window.setTimeout(function (){
-
-    stage.update();
-    timeout2();
-
-  }, 33);
-}
-timeout2();
-
-
-//Aggiorno il testo che mostra il giorno ogni 200ms
 var text = new createjs.Text("Giorno: 0", "20px Arial", "#ff7700");
 text.x = 10;
 text.y = 10;
 stage.addChild(text);
-function timeout3() {
+//Mostro a schermo la posizione dei nuovi pianeti a circa 30FPS
+function timeout() {
   window.setTimeout(function (){
-    text.text = "Giorno: " + Math.round(elapsedHours/24);
-    timeout3();
-  }, 200);
+
+    for ( var i = 0; i < calcoliPerFrame; i++) {
+      planetsList.forEach(function (planet){
+        planet.update();
+      });
+      planetsList.forEach(function (planet){
+        planet.afterUpdate();
+      });
+
+    }
+    frameCalcolati++;
+    text.text = "Giorno: " + Math.round(frameCalcolati * calcoliPerFrame * h / 60 / 60 / 24);
+    stage.update();
+    timeout();
+
+  }, 1000/fps);
 }
-timeout3();
+timeout();
