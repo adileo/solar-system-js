@@ -1,6 +1,6 @@
 /*
 * Simulazione del problema degli n-corpi applicata ad una parte del sistema solare (sole, mercurio, venere, terra, marte)
-* tramite metodo di Eulero, con un dt di 1 ora.
+* tramite metodo di Eulero, con un dt di 10 minuti.
 */
 
 // Costante di Gravitazione
